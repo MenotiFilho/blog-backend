@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -47,7 +48,7 @@ type Claims struct {
 
 func main() {
 	// Connect to the database
-	connStr := "host=db user=blog_postgresql_wt8s_user password=LaoAFRAni8L2I3PERuUctoeUixz6Csuk dbname=blog_postgresql_wt8s port=5432 sslmode=disable"
+	connStr := os.Getenv("DATABASE_URL")
 	for i := 0; i < 30; i++ {
 		db, err = gorm.Open("postgres", connStr)
 		if err == nil {
