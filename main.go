@@ -69,15 +69,18 @@ func main() {
 
 	r := mux.NewRouter()
 
+	// Serve the root HTML page
+	r.HandleFunc("/", rootHandler).Methods("GET")
+
 	// Public routes
 	r.HandleFunc("/signup", signup).Methods("POST")
 	r.HandleFunc("/login", login).Methods("POST")
+	r.HandleFunc("/posts", getPosts).Methods("GET")
 
 	// Protected routes
 	protected := r.PathPrefix("/").Subrouter()
 	protected.Use(jwtMiddleware)
 	protected.HandleFunc("/posts", createPost).Methods("POST")
-	protected.HandleFunc("/posts", getPosts).Methods("GET")
 
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":8000", nil))
@@ -230,4 +233,23 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(posts)
+}
+
+// Root handler to serve a simple HTML page
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	html := `
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Server Status</title>
+	</head>
+	<body>
+		<h1>The server is up and running!</h1>
+		<p>Visit the <a href="/posts">/posts</a> endpoint to see all posts.</p>
+	</body>
+	</html>
+	`
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
 }
