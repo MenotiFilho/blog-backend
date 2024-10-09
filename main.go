@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/joho/godotenv" // Import the godotenv package
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -48,10 +47,7 @@ type Claims struct {
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
+
 	// Connect to the database
 	connStr := os.Getenv("DATABASE_URL")
 	for i := 0; i < 30; i++ {
