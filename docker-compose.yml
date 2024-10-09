@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: blog_postgresql_wt8s_user
+      POSTGRES_PASSWORD: LaoAFRAni8L2I3PERuUctoeUixz6Csuk
+      POSTGRES_DB: blog_postgresql_wt8s
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U blog_postgresql_wt8s_user -d blog_postgresql_wt8s',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8000:8000'
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_USER=blog_postgresql_wt8s_user
+      - DB_PASSWORD=LaoAFRAni8L2I3PERuUctoeUixz6Csuk
+      - DB_NAME=blog_postgresql_wt8s
+      - DB_PORT=5432
