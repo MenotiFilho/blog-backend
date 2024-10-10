@@ -16,6 +16,7 @@ COPY . .
 # Build the Go app for Linux with static linking
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
 
+
 # Start a new stage from scratch
 FROM debian:bullseye-slim
 
@@ -24,6 +25,15 @@ WORKDIR /app
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/main .
+
+# Install ca-certificates and curl (if necessary)
+RUN apt-get update && \
+    apt-get install -y ca-certificates && \
+    update-ca-certificates
+
+
+# Update certificates
+RUN update-ca-certificates
 
 # Expose the port the app runs on
 EXPOSE 8000
