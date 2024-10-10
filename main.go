@@ -33,31 +33,12 @@ type User struct {
 
 // Post model
 type Post struct {
-	ID      uint      `json:"id" gorm:"primary_key"`
-	Title   string    `json:"title"`
-	Content string    `json:"content"`
-	Tags    string    `json:"tags"`
-	Likes   int       `json:"likes"`
-	Images  []byte    `json:"images" gorm:"type:jsonb"`
-}
-
-func (p *Post) SetImages(images []string) error {
-	jsonData, err := json.Marshal(images)
-	if err != nil {
-		return err
-	}
-	p.Images = jsonData
-	return nil
-}
-
-// Para recuperar um array de strings
-func (p *Post) GetImages() ([]string, error) {
-	var images []string
-	err := json.Unmarshal(p.Images, &images)
-	if err != nil {
-		return nil, err
-	}
-	return images, nil
+	ID      uint     `json:"id" gorm:"primary_key"`
+	Title   string   `json:"title"`
+	Content string   `json:"content"`
+	Tags    string   `json:"tags"`
+	Likes   int      `json:"likes"`
+	Images  string `json:"images" gorm:"type:jsonb"`
 }
 
 var jwtKey = []byte("my_secret_key") // Secret key for signing JWTs
@@ -103,6 +84,7 @@ func main() {
 	r.HandleFunc("/login", login).Methods("POST")
 	r.HandleFunc("/posts", getPosts).Methods("GET")
 	r.HandleFunc("/upload", uploadImageHandler).Methods("POST") // Endpoint para upload de imagens
+
 
 	// Protected routes
 	protected := r.PathPrefix("/").Subrouter()
@@ -233,19 +215,11 @@ func jwtMiddleware(next http.Handler) http.Handler {
 }
 
 // Create Post handler
-// Create Post handler
 func createPost(w http.ResponseWriter, r *http.Request) {
 	var post Post
 	err := json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
-
-	// Adicione esta linha para definir as imagens
-	err = post.SetImages([]string{"https://url-da-imagem-1.com", "https://url-da-imagem-2.com"})
-	if err != nil {
-		http.Error(w, "Could not set images", http.StatusInternalServerError)
 		return
 	}
 
@@ -257,7 +231,6 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(post)
 }
-
 
 // Get Posts handler
 func getPosts(w http.ResponseWriter, r *http.Request) {
