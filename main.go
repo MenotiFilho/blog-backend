@@ -38,7 +38,6 @@ type Post struct {
 	Content string   `json:"content"`
 	Tags    string   `json:"tags"`
 	Likes   int      `json:"likes"`
-	Images  string `json:"images"`
 }
 
 var jwtKey = []byte("my_secret_key") // Secret key for signing JWTs
@@ -83,13 +82,14 @@ func main() {
 	r.HandleFunc("/signup", signup).Methods("POST")
 	r.HandleFunc("/login", login).Methods("POST")
 	r.HandleFunc("/posts", getPosts).Methods("GET")
-	r.HandleFunc("/upload", uploadImageHandler).Methods("POST") // Endpoint para upload de imagens
 
 
 	// Protected routes
 	protected := r.PathPrefix("/").Subrouter()
 	protected.Use(jwtMiddleware)
 	protected.HandleFunc("/posts", createPost).Methods("POST")
+	protected.HandleFunc("/upload", uploadImageHandler).Methods("POST")
+
 
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":8000", nil))
