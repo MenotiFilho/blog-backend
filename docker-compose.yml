@@ -34,3 +34,5 @@ services:
       - DB_PASSWORD=LaoAFRAni8L2I3PERuUctoeUixz6Csuk
       - DB_NAME=blog_postgresql_wt8s
       - DB_PORT=5432
+    dns:
+      - 8.8.8.8 # Google DNS
