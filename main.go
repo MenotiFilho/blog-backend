@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"time"
@@ -13,6 +15,9 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
 var db *gorm.DB
@@ -23,15 +28,17 @@ type User struct {
 	ID           uint   `json:"id" gorm:"primary_key"`
 	Username     string `json:"username" gorm:"unique"`
 	PasswordHash string `json:"password_hash"`
+	ProfilePic   string `json:"profile_pic"`
 }
 
 // Post model
 type Post struct {
-	ID      uint   `json:"id" gorm:"primary_key"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	Tags    string `json:"tags"`
-	Likes   int    `json:"likes"`
+	ID      uint     `json:"id" gorm:"primary_key"`
+	Title   string   `json:"title"`
+	Content string   `json:"content"`
+	Tags    string   `json:"tags"`
+	Likes   int      `json:"likes"`
+	Images  []string `json:"images" gorm:"type:jsonb"`
 }
 
 var jwtKey = []byte("my_secret_key") // Secret key for signing JWTs
@@ -233,6 +240,59 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(posts)
+}
+
+// UploadImageToCloudinary uploads an image to Cloudinary and returns the URL
+func UploadImageToCloudinary(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+	// Inicialize o Cloudinary com suas credenciais
+	cld, err := cloudinary.NewFromParams(os.Getenv("CLOUDINARY_CLOUD_NAME"), os.Getenv("CLOUDINARY_API_KEY"), os.Getenv("CLOUDINARY_API_SECRET"))
+	if err != nil {
+		return "", fmt.Errorf("falha ao inicializar Cloudinary: %v", err)
+	}
+
+	ctx := context.Background()
+
+	// Faça o upload do arquivo para o Cloudinary
+	uploadResult, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
+		Folder: "blog_images", // Cria uma pasta chamada "blog_images" para organizar suas imagens
+	})
+	if err != nil {
+		return "", fmt.Errorf("falha ao fazer upload: %v", err)
+	}
+
+	// Retorna a URL pública da imagem
+	return uploadResult.SecureURL, nil
+}
+
+// Handle image upload from user
+func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the multipart form containing the image
+	err := r.ParseMultipartForm(10 << 20) // Limite de 10MB
+	if err != nil {
+		http.Error(w, "Falha ao processar a imagem", http.StatusBadRequest)
+		return
+	}
+
+	// Obtenha o arquivo enviado
+	file, fileHeader, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "Não foi possível obter o arquivo", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Faça o upload da imagem para o Cloudinary
+	imageURL, err := UploadImageToCloudinary(file, fileHeader)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Falha ao fazer upload: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Retorne a URL da imagem para o cliente
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"url": imageURL,
+	})
 }
 
 // Root handler to serve a simple HTML page
