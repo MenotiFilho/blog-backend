@@ -83,6 +83,8 @@ func main() {
 	r.HandleFunc("/signup", signup).Methods("POST")
 	r.HandleFunc("/login", login).Methods("POST")
 	r.HandleFunc("/posts", getPosts).Methods("GET")
+	r.HandleFunc("/upload", uploadImageHandler).Methods("POST") // Endpoint para upload de imagens
+
 
 	// Protected routes
 	protected := r.PathPrefix("/").Subrouter()
