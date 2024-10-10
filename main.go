@@ -38,8 +38,27 @@ type Post struct {
 	Content string   `json:"content"`
 	Tags    string   `json:"tags"`
 	Likes   int      `json:"likes"`
-	Images  []string `json:"images" gorm:"type:jsonb"`
+	Images  JSONBStringArray `json:"images" gorm:"type:jsonb"`
 }
+
+// JSONBStringArray é um tipo que implementa json.Marshaler e json.Unmarshaler.
+type JSONBStringArray []string
+
+// MarshalJSON converte o JSONBStringArray para JSON.
+func (a JSONBStringArray) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]string(a))
+}
+
+// UnmarshalJSON converte JSON para JSONBStringArray.
+func (a *JSONBStringArray) UnmarshalJSON(data []byte) error {
+	var arr []string
+	if err := json.Unmarshal(data, &arr); err != nil {
+		return err
+	}
+	*a = JSONBStringArray(arr)
+	return nil
+}
+
 
 var jwtKey = []byte("my_secret_key") // Secret key for signing JWTs
 
