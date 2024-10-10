@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -41,7 +43,19 @@ type Post struct {
 	Images  []string `json:"images" gorm:"type:jsonb"`
 }
 
-var jwtKey = []byte("my_secret_key") // Secret key for signing JWTs
+func generateSecretKey(length int) (string, error) {
+	// Cria um slice de bytes
+	key := make([]byte, length)
+	// Preenche o slice com dados aleatórios
+	_, err := rand.Read(key)
+	if err != nil {
+		return "", err
+	}
+	// Codifica os bytes gerados em base64 para uma representação em string
+	return base64.StdEncoding.EncodeToString(key), nil
+}
+
+var jwtKey, _ = generateSecretKey(32)  // Secret key for signing JWTs
 
 type Credentials struct {
 	Username string `json:"username"`
