@@ -38,7 +38,7 @@ type Post struct {
 	Content string   `json:"content"`
 	Tags    string   `json:"tags"`
 	Likes   int      `json:"likes"`
-	Images  string `json:"images" gorm:"type:jsonb"`
+	Images  string `json:"images"`
 }
 
 var jwtKey = []byte("my_secret_key") // Secret key for signing JWTs
